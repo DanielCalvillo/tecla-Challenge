@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 
 const productos = [
-  { nombre: "detergente", precio: 1.7 },
-  { nombre: "lavandia", precio: 2.1 },
-  { nombre: "desinfectante", precio: 1.9 },
-  { nombre: "blanqueador", precio: 3.2 },
+  { codigo: 1, nombre: "combo 1", precio: 500 },
+  { codigo: 2, nombre: "combo 2", precio: 700 },
+  { codigo: 3, nombre: "combo 3", precio: 900 },
+  { codigo: 4, nombre: "combo 4", precio: 980 },
 ];
 
 const useStyles = makeStyles((theme) => ({
@@ -33,96 +33,154 @@ const useStyles = makeStyles((theme) => ({
     margin: "2rem auto",
     width: "25ch",
   },
-  productoGanancias: {
+  facturaGenerada: {
+    display: "flex",
+    flexDirection: "column",
+    border: "3px solid rgba(60,67,71,0.67)",
+    borderRadius: "10px",
+    marginRight: "1rem",
+    marginLeft: "2rem",
+    marginTop: "1rem",
+  },
+  rubroFactura: {
     display: "flex",
     justifyContent: "space-between",
+    margin: "0 7rem 0 4rem",
+  },
+  rubroFacturaGenerada: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "0 1rem 0 1rem",
   },
 }));
 
 export default function SecondChallenge() {
   const classes = useStyles();
-  const [factura, setFactura] = useState({ producto: 0, litros: 1 });
-  const [facturas, setFacturas] = useState([{ producto: 0, litros: 0 }]);
+  const [factura, setFactura] = useState({
+    codigo: 0,
+    cantidad: 1,
+    categoria: 0,
+    areaDeVenta: 0,
+    precio: 0,
+    iva: 0,
+    total: 0,
+  });
+  const [nuevaFactura, setNuevaFactua] = useState({});
 
   const [resultados, setResultados] = useState([]);
 
-  let contadorDetergente = 0;
-  let litrosDetergente = 0;
+  const [corteDeMes, setCorteDeMes] = useState({});
 
-  let contadorLavandia = 0;
-  let litrosLavandia = 0;
+  const generarFactura = () => {
+    let facturaConIvaIncluido = incluirIva(factura);
+    console.log(facturaConIvaIncluido);
+    setNuevaFactua(facturaConIvaIncluido);
+    setResultados([...resultados, facturaConIvaIncluido]);
+    setFactura({
+      codigo: 0,
+      cantidad: 1,
+      categoria: 0,
+      areaDeVenta: 0,
+      precio: 0,
+      iva: 0,
+      total: 0,
+    });
+  };
 
-  let contadorDesinfectante = 0;
-  let litrosDesinfectante = 0;
+  const incluirIva = (factura) => {
+    let facturaConIvaIncluido = { ...factura };
+    if (parseInt(factura.categoria) === 1) {
+      let precioDeCombo = productos[factura.codigo - 1].precio;
+      let numDeCombos = parseInt(factura.cantidad);
 
-  let contadorBlanqueador = 0;
-  let litrosBlanqueador = 0;
+      let precio = precioDeCombo * numDeCombos;
 
-  const generarFactura = (ev) => {
-    ev.preventDefault();
-    setFacturas([...facturas, factura]);
-    setFactura({ producto: 0, litros: 1 });
+      let iva = precio * 0.21;
+
+      let total = precio + iva;
+
+      facturaConIvaIncluido = {
+        ...facturaConIvaIncluido,
+        precio,
+        iva: iva.toFixed(2),
+        total,
+      };
+
+      return facturaConIvaIncluido;
+    } else if (parseInt(factura.categoria) === 2) {
+      let precioDeCombo = productos[factura.codigo - 1].precio;
+      let numDeCombos = parseInt(factura.cantidad);
+
+      let precio = precioDeCombo * numDeCombos;
+
+      let iva = precio * 0.315;
+
+      let total = precio + iva;
+
+      facturaConIvaIncluido = {
+        ...facturaConIvaIncluido,
+        precio,
+        iva: iva.toFixed(2),
+        total,
+      };
+
+      return facturaConIvaIncluido;
+    }
+  };
+
+  const productosVendidos = () => {
+    var cantidadVendidaPrimerCombo = resultados.reduce((sum, value) => {
+      return parseInt(value.codigo) === 1
+        ? sum + parseInt(value.cantidad)
+        : sum;
+    }, 0);
+    console.log(`Combos 1 vendidos: ${cantidadVendidaPrimerCombo}`);
+
+    var cantidadVendidaSegundoCombo = resultados.reduce((sum, value) => {
+      return parseInt(value.codigo) === 2
+        ? sum + parseInt(value.cantidad)
+        : sum;
+    }, 0);
+    console.log(`Combos 2 vendidos: ${cantidadVendidaSegundoCombo}`);
+
+    var cantidadVendidaTercerCombo = resultados.reduce((sum, value) => {
+      return parseInt(value.codigo) === 3
+        ? sum + parseInt(value.cantidad)
+        : sum;
+    }, 0);
+    console.log(`Combos 3 vendidos: ${cantidadVendidaTercerCombo}`);
+
+    var cantidadVendidaCuartoCombo = resultados.reduce((sum, value) => {
+      return parseInt(value.codigo) === 4
+        ? sum + parseInt(value.cantidad)
+        : sum;
+    }, 0);
+    console.log(`Combos 4 vendidos: ${cantidadVendidaCuartoCombo}`);
+
+    return [
+      { combo: 1, cantidad: cantidadVendidaPrimerCombo },
+      { combo: 2, cantidad: cantidadVendidaSegundoCombo },
+      { combo: 3, cantidad: cantidadVendidaTercerCombo },
+      { combo: 4, cantidad: cantidadVendidaCuartoCombo },
+    ];
+  };
+
+  const ivaRecaudado = () => {
+    var ivaTotal = resultados.reduce((sum, value) => {
+      return parseInt(value.iva) ? sum + parseInt(value.iva) : sum;
+    }, 0);
+    return ivaTotal;
   };
 
   const procesarFacturas = () => {
-    contadorDetergente = 0;
-    contadorLavandia = 0;
-    contadorDesinfectante = 0;
-    contadorBlanqueador = 0;
+    let ventasTotales = productosVendidos();
+    ventasTotales.sort((a, b) => b.cantidad - a.cantidad);
 
-    for (let theFactura in facturas) {
-      const facturaSeleccionada = facturas[theFactura];
-      const productoDeFactura = productos[facturaSeleccionada.producto - 1];
-      const litrosDelProducto = facturaSeleccionada.litros;
-      if (productoDeFactura) {
-        switch (productoDeFactura.nombre) {
-          case "detergente":
-            litrosDetergente = litrosDelProducto;
-            contadorDetergente += productoDeFactura.precio * litrosDelProducto;
-            break;
-          case "lavandia":
-            litrosLavandia = litrosDelProducto;
-            contadorLavandia += productoDeFactura.precio * litrosDelProducto;
-            break;
-          case "desinfectante":
-            litrosDesinfectante = litrosDelProducto;
-            contadorDesinfectante +=
-              productoDeFactura.precio * litrosDelProducto;
-            break;
-          case "blanqueador":
-            litrosBlanqueador = litrosDelProducto;
-            contadorBlanqueador += productoDeFactura.precio * litrosDelProducto;
-            break;
-          default:
-            break;
-        }
-      }
-    }
+    let totalDeIvaRecaudado = ivaRecaudado();
 
-    let arrayInicial = [
-      {
-        producto: "detergente",
-        ganancia: contadorDetergente.toFixed(2),
-        litros: litrosDetergente,
-      },
-      {
-        producto: "lavanda",
-        ganancia: contadorLavandia.toFixed(2),
-        litros: litrosLavandia,
-      },
-      {
-        producto: "desinfectante",
-        ganancia: contadorDesinfectante.toFixed(2),
-        litros: litrosDesinfectante,
-      },
-      {
-        producto: "blanqueador",
-        ganancia: contadorBlanqueador.toFixed(2),
-        litros: litrosBlanqueador,
-      },
-    ];
-    arrayInicial.sort((a, b) => a.litros - b.litros);
-    setResultados(arrayInicial);
+    console.log(ventasTotales);
+    console.log(totalDeIvaRecaudado);
+    setCorteDeMes({ ventasTotales, ivaTotal: totalDeIvaRecaudado });
   };
 
   return (
@@ -131,43 +189,63 @@ export default function SecondChallenge() {
         <h2>Lista de Productos</h2>
         <ol>
           <li className={classes.listItem}>
-            <span className={classes.producto}>1.- Detergente</span>
-            <span className={classes.precio}>Precio: 1.7</span>
+            <span className={classes.producto}>1.- Combo 1</span>
+            <span className={classes.precio}>Precio: 500</span>
           </li>
           <li className={classes.listItem}>
-            <span className={classes.producto}>2.- Lavandina</span>
-            <span className={classes.precio}>Precio: 2.1</span>
+            <span className={classes.producto}>2.- Combo 2</span>
+            <span className={classes.precio}>Precio: 700</span>
           </li>
           <li className={classes.listItem}>
-            <span className={classes.producto}>3.- Desinfectante</span>
-            <span className={classes.precio}>Precio: 1.9</span>
+            <span className={classes.producto}>3.- Combo 3</span>
+            <span className={classes.precio}>Precio: 900</span>
           </li>
           <li className={classes.listItem}>
-            <span className={classes.producto}>4.- Detergente</span>
-            <span className={classes.precio}>Precio: 3.2</span>
+            <span className={classes.producto}>4.- Combo 4</span>
+            <span className={classes.precio}>Precio: 980</span>
           </li>
         </ol>
       </div>
-      <div className={classes.form}>
-        <h2>Factura Tu Producto</h2>
+      <form className={classes.form}>
+        <h2>Factura Tu Combo</h2>
         <TextField
           id="margin-none"
           type="number"
           className={classes.textField}
-          helperText="Número de Producto"
-          value={factura.producto}
+          helperText="código de tu combo"
+          value={factura.codigo}
           onChange={(event) =>
-            setFactura({ ...factura, producto: event.target.value })
+            setFactura({ ...factura, codigo: event.target.value })
           }
         />
         <TextField
           id="margin-dense"
           type="number"
           className={classes.textField}
-          helperText="Cantidad de Litros"
-          value={factura.litros}
+          helperText="Cantidad de combos"
+          value={factura.cantidad}
           onChange={(event) =>
-            setFactura({ ...factura, litros: event.target.value })
+            setFactura({ ...factura, cantidad: event.target.value })
+          }
+        />
+        <TextField
+          id="margin-dense"
+          type="number"
+          className={classes.textField}
+          helperText="Tu categoría"
+          value={factura.categoria}
+          onChange={(event) =>
+            setFactura({ ...factura, categoria: event.target.value })
+          }
+        />
+        <TextField
+          id="margin-dense"
+          type="number"
+          className={classes.textField}
+          helperText="Área de ventas"
+          value={factura.areaDeVenta}
+          onChange={(event) =>
+            setFactura({ ...factura, areaDeVenta: event.target.value })
           }
         />
         <Button
@@ -178,23 +256,66 @@ export default function SecondChallenge() {
         >
           Generar Factura
         </Button>
+      </form>
+      {nuevaFactura ? (
+        <ul>
+          <li className={classes.rubroFactura}>
+            <span>Código de Combo:</span>
+            <span>{nuevaFactura.codigo}</span>
+          </li>
+          <li className={classes.rubroFactura}>
+            <span>Cantidad de Combos:</span>
+            <span>{nuevaFactura.cantidad}</span>
+          </li>
+          <li className={classes.rubroFactura}>
+            <span>Categoría del cliente:</span>
+            <span>{nuevaFactura.categoria}</span>
+          </li>
+          <li className={classes.rubroFactura}>
+            <span>Área de venta:</span>
+            <span>{nuevaFactura.areaDeVenta}</span>
+          </li>
+          <li className={classes.rubroFactura}>
+            <span>Precio: </span>
+            <span>$ {nuevaFactura.precio}</span>
+          </li>
+          <li className={classes.rubroFactura}>
+            <span>IVA: </span>
+            <span>$ {nuevaFactura.iva}</span>
+          </li>
+          <li className={classes.rubroFactura}>
+            <span>Total: </span>
+            <span>$ {nuevaFactura.total}</span>
+          </li>
+        </ul>
+      ) : (
+        ""
+      )}
+      <div>
+        <h2>FACTURAS GENERADAS</h2>
+        <ul style={{ margin: "0 !important", padding: "0" }}>
+          {resultados.map((factura, index) => {
+            return (
+              <li className={classes.facturaGenerada}>
+                <div className={classes.rubroFacturaGenerada}>
+                  <span>Factura: {index + 1}</span>
+                  <span>Combo: {factura.codigo}</span>
+                  <span>NumCombos: {factura.cantidad}</span>
+                </div>
+                <div className={classes.rubroFacturaGenerada}>
+                  <span>Categoría del cliente: {factura.categoria}</span>
+                  <span>Área de venta: {factura.areaDeVenta}</span>
+                </div>
+                <div className={classes.rubroFacturaGenerada}>
+                  <span>precio: {factura.precio}</span>
+                  <span>iva: {factura.iva}</span>
+                  <span>total: {factura.total}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-      <ul>
-        {resultados.map((resultado) => {
-          return (
-            <li className={classes.productoGanancias}>
-              <span>Producto: {resultado.producto}</span>
-              <span style={{ marginLeft: "auto" }}>
-                Ganancia: ${resultado.ganancia}
-              </span>
-              <span style={{ marginLeft: "1rem" }}>
-                Litros: {resultado.litros}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-
       <div>
         <Button
           variant="contained"
@@ -205,6 +326,35 @@ export default function SecondChallenge() {
         >
           Procesar Facturas
         </Button>
+      </div>
+      <div>
+        {corteDeMes.ventasTotales ? (
+          <div>
+            <h3>Ventas Totales por producto</h3>
+            <ul
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                margin: "0 8rem 0 5rem",
+              }}
+            >
+              {corteDeMes.ventasTotales.map((valor) => {
+                return (
+                  <li
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <span>Combo: {valor.combo}</span>{" "}
+                    <span>total: {valor.cantidad}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <h4>Total de Iva Recaudado: {corteDeMes.ivaTotal}</h4>
+          </div>
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );
